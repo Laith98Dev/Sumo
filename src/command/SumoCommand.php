@@ -40,7 +40,6 @@ use pocketmine\command\CommandSender;
 use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
 use vp817\GameLib\GameLib;
-use vp817\Sumo;
 
 class SumoCommand extends Command
 {
@@ -202,13 +201,13 @@ class SumoCommand extends Command
 		if ($sender->hasPermission("sumo.admin")) {
 			foreach (self::ADMIN_SUB_COMMANDS_USAGE as $cmd => $usage) {
 				$sender->sendMessage(TextFormat::GREEN . $usage);
-				$sender->sendMessage(TextFormat::GRAY . self::ADMIN_SUB_COMMANDS_DESCRIPTION[$cmd]);
+				$sender->sendMessage(TextFormat::GRAY . self::ADMIN_SUB_COMMANDS_DESCRIPTION[$cmd] . ":");
 			}
 		}
 
 		$sender->sendMessage(TextFormat::GREEN . "/sumo join <id: optional>:");
 		$sender->sendMessage(TextFormat::GRAY . "join a certain or random arena");
-		$sender->sendMessage(TextFormat::GREEN . "/sumo quit");
+		$sender->sendMessage(TextFormat::GREEN . "/sumo quit:");
 		$sender->sendMessage(TextFormat::GRAY . "quit from the sumo arena you are in");
 	}
 }
