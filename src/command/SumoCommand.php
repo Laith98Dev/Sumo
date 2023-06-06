@@ -203,8 +203,8 @@ class SumoCommand extends Command
 		$sender->sendMessage(TextFormat::GOLD . "Sumo command help:");
 		if ($sender->hasPermission("sumo.admin")) {
 			foreach (self::ADMIN_SUB_COMMANDS_USAGE as $cmd => $usage) {
-				$sender->sendMessage(TextFormat::GREEN . $usage);
-				$sender->sendMessage(TextFormat::GRAY . self::ADMIN_SUB_COMMANDS_DESCRIPTION[$cmd] . ":");
+				$sender->sendMessage(TextFormat::GREEN . $usage . ":");
+				$sender->sendMessage(TextFormat::GRAY . self::ADMIN_SUB_COMMANDS_DESCRIPTION[$cmd]);
 			}
 		}
 
