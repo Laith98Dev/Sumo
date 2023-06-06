@@ -73,6 +73,8 @@ class SetupEventListener implements Listener
 			return;
 		}
 
+		$event->cancel();
+
 		$this->gamelib->getSetupManager()->get($bytes, function (SetupPlayer $player) use ($message): void {
 			$cells = $player->getCells();
 			$currentWorld = $cells->getWorld();
@@ -80,8 +82,6 @@ class SetupEventListener implements Listener
 			$cellsLocation = $cells->getLocation();
 			$arenaID = $player->getSetupingArenaID();
 			$settings = $player->getSetupSettings();
-			
-			$event->cancel();
 
 			switch (strtolower($message)) {
 				case "help":
@@ -103,6 +103,7 @@ class SetupEventListener implements Listener
 					$settings->setSpawn(2, $cellsLocation);
 					break;
 				case "finish":
+					$settings->setArenaData(["slots" => 2]); // only for solo
 					$this->gamelib->finishArenaSetup($cells, fn ($arena) => $cells->sendMessage(TextFormat::GOLD . "The arena \"$arenaID\" has been marked as it has been setuped"));
 					break;
 				default:
