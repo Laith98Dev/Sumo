@@ -80,6 +80,8 @@ class SetupEventListener implements Listener
 			$cellsLocation = $cells->getLocation();
 			$arenaID = $player->getSetupingArenaID();
 			$settings = $player->getSetupSettings();
+			
+			$event->cancel();
 
 			switch (strtolower($message)) {
 				case "help":
