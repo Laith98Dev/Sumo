@@ -1,0 +1,10 @@
+name: Sumo
+src-namespace-prefix: vp817
+main: vp817\Sumo
+api: [ 4.0.0 ]
+version: 1.0.0
+authors: [ vp817 ]
+
+permissions:
+  sumo.admin:
+    default: op
