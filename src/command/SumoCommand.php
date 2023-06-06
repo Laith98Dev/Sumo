@@ -188,6 +188,9 @@ class SumoCommand extends Command
 
 				$this->gamelib->leaveArena($sender);
 				break;
+			default:
+				$this->sendHelp($sender);
+				break;
 		}
 	}
 
