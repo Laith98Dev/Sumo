@@ -247,6 +247,8 @@ class ArenaEventListener extends DefaultArenaListener
 	 */
 	public function onDamage(EntityDamageEvent $event): void
 	{
+		$arena = $this->arena;
+		$state = $arena->getState();
 		$victim = $event->getEntity();
 
 		if (!$victim instanceof Player) {
@@ -275,6 +277,10 @@ class ArenaEventListener extends DefaultArenaListener
 
 			if (!$criminal instanceof Player) {
 				return;
+			}
+
+			if ($state->equals(ArenaStates::WAITING()) || $state->equals(ArenaStates::COUNTDOWN()) || $state->equals(ArenaStates::RESTARTING())) {
+				$event->cancel();
 			}
 
 			if ($victim->getHealth() < 20) $victim->setHealth(20);
