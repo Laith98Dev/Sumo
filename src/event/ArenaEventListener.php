@@ -102,7 +102,7 @@ class ArenaEventListener extends DefaultArenaListener
 		$timer = $event->getTimer();
 
 		if ($state->equals(ArenaStates::WAITING())) {
-			$messageBroadcaster->broadcastMessage(TextFormat::GOLD . "Waiting for (" . $mode->getPlayerCount() . "/" . $mode->getMaxPlayers());
+			$messageBroadcaster->broadcastPopup(TextFormat::GOLD . "Waiting for (" . $mode->getPlayerCount() . "/" . $mode->getMaxPlayers() . ")");
 		} else if ($state->equals(ArenaStates::COUNTDOWN())) {
 			if ($timer < 1) {
 				return;
