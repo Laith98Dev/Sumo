@@ -112,7 +112,8 @@ class SumoCommand extends Command
 					$arenaID = $data["arenaID"];
 
 					$sender->sendMessage(TextFormat::GREEN . "The arena with the id of: \"{$arenaID}\" has been successfully created");
-					$this->gamelib->addPlayerToSetupArena($sender, $arenaID, function ($player) use ($arenaID): void {
+					$this->gamelib->addPlayerToSetupArena($sender, $arenaID, function ($setupPlayer) use ($arenaID): void {
+						$player = $setupPlayer->getCells();
 						$player->sendMessage(TextFormat::GREEN . "You have joined the setup mode.");
 						$player->sendMessage(TextFormat::GOLD . "The arena that you are setuping is: " . TextFormat::AQUA . $arenaID);
 						$player->sendMessage(TextFormat::GOLD . "Now type \"help\" in chat to know the setup commands");
