@@ -81,7 +81,7 @@ class SetupEventListener implements Listener
 			$currentWorldName = $currentWorld->getFolderName();
 			$cellsLocation = $cells->getLocation();
 			$arenaID = $player->getSetupingArenaID();
-			$settings = $player->getSetupSettings();
+			$settingsQueue = $player->getSetupSettingsQueue();
 
 			switch (strtolower($message)) {
 				case "help":
@@ -92,18 +92,18 @@ class SetupEventListener implements Listener
 					break;
 				case "lobby":
 					$cells->sendMessage(TextFormat::GOLD . "The lobby has been updated to: " . $currentWorldName);
-					$settings->setLobbySettings($currentWorldName, $cellsLocation);
+					$settingsQueue->setLobbySettings($currentWorldName, $cellsLocation);
 					break;
 				case "spawn1":
 					$cells->sendMessage(TextFormat::GOLD . "The spawn1 has been updated to your pos");
-					$settings->setSpawn(1, $cellsLocation);
+					$settingsQueue->setSpawn(1, $cellsLocation);
 					break;
 				case "spawn2":
 					$cells->sendMessage(TextFormat::GOLD . "The spawn2 has been updated to your pos");
-					$settings->setSpawn(2, $cellsLocation);
+					$settingsQueue->setSpawn(2, $cellsLocation);
 					break;
 				case "finish":
-					$settings->setArenaData(["slots" => 2]); // only for solo
+					$settingsQueue->setArenaData(["slots" => 2]); // only for solo
 					$this->gamelib->finishArenaSetup($cells, fn ($arena) => $cells->sendMessage(TextFormat::GOLD . "The arena \"$arenaID\" has been marked as it has been setuped"));
 					break;
 				default:
