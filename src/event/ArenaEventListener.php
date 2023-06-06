@@ -35,8 +35,11 @@ declare(strict_types=1);
 
 namespace vp817\event;
 
+use pocketmine\event\block\BlockBreakEvent;
+use pocketmine\event\block\BlockPlaceEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
+use pocketmine\event\player\PlayerExhaustEvent;
 use pocketmine\player\GameMode;
 use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
@@ -77,6 +80,7 @@ class ArenaEventListener extends DefaultArenaListener
 	{
 		$player = $event->getPlayer();
 		$player->initBasic();
+		$player->setFood(20);
 	}
 
 	/**
@@ -124,12 +128,13 @@ class ArenaEventListener extends DefaultArenaListener
 		} else if ($state->equals(ArenaStates::INGAME())) {
 			$messageBroadcaster->broadcastTip(TextFormat::GOLD . "MaxTime: " . TextFormat::GREEN . strval($timer));
 
-			if (!empty($this->combatVictims)) {
-				foreach ($this->combatVictims as $vBytes => $victim) {
-					$criminal = $this->combatCriminals[$vBytes];
+			if (!empty($this->combatVictims) && !empty($this->combatCriminals)) {
+				foreach ($this->combatVictims as $cBytes => $victim) {
+					$vBytes = $victim->getUniqueId()->getBytes();
+					$criminal = $this->combatCriminals[$victim->getUniqueId()->getBytes()];
 
-					--$this->combatTimers[$vBytes];
-					--$this->combatTimers[$criminal->getUniqueId()->getBytes()];
+					if (array_key_exists($cBytes, $this->combatTimers)) --$this->combatTimers[$cBytes];
+					if (array_key_exists($vBytes, $this->combatTimers)) --$this->combatTimers[$vBytes];
 				}
 			}
 
@@ -141,16 +146,23 @@ class ArenaEventListener extends DefaultArenaListener
 				}
 			}
 
-			if (!empty($this->crminialsWithKills)) {
+			if (!empty($this->crminialsWithKills) && !empty($this->victimsThatGotKilled)) {
 				foreach ($this->crminialsWithKills as $vBytes => $criminal) {
-					$victim = $this->victimsThatGotKilled[$vBytes];
 					$cBytes = $criminal->getUniqueId()->getBytes();
-
-					$messageBroadcaster->broadcastMessage(TextFormat::GOLD . $victim->getName() . TextFormat::AQUA . " has been eliminated by " . TextFormat::RED . $criminal->getName());
-
-					unset($this->crminialsWithKills[$vBytes]);
-					unset($this->victimsThatGotKilled[$cBytes]);
+					if (array_key_exists($cBytes, $this->victimsThatGotKilled)) {
+						$victim = $this->victimsThatGotKilled[$cBytes];
+						$vBytes = $$victim->getUniqueId()->getBytes();
+	
+						$messageBroadcaster->broadcastMessage(TextFormat::GOLD . $victim->getName() . TextFormat::AQUA . " has been eliminated by " . TextFormat::RED . $criminal->getName());
+	
+						if (array_key_exists($vBytes, $this->crminialsWithKills)) unset($this->crminialsWithKills[$vBytes]);
+						unset($this->victimsThatGotKilled[$cBytes]);
+					}
 				}
+			}
+
+			if ($mode->getPlayerCount() < 2) {
+				$mode->endGame($arena);
 			}
 		} else if ($state->equals(ArenaStates::RESTARTING())) {
 			$messageBroadcaster->broadcastTitle(TextFormat::GOLD . "Restarting in:");
@@ -239,6 +251,7 @@ class ArenaEventListener extends DefaultArenaListener
 		}
 		$player->setGamemode(GameMode::SPECTATOR());
 		$this->spectators[$bytes] = $player;
+		$player->teleport($this->arena->getLobbySettings()->getLocation());
 	}
 
 	/**
@@ -248,10 +261,17 @@ class ArenaEventListener extends DefaultArenaListener
 	public function onDamage(EntityDamageEvent $event): void
 	{
 		$arena = $this->arena;
+		$mode = $arena->getMode();
 		$state = $arena->getState();
 		$victim = $event->getEntity();
 
 		if (!$victim instanceof Player) {
+			return;
+		}
+
+		$victimBytes = $victim->getUniqueId()->getBytes();
+
+		if (!array_key_exists($victimBytes, $mode->getPlayers())) {
 			return;
 		}
 
@@ -286,9 +306,63 @@ class ArenaEventListener extends DefaultArenaListener
 			if ($victim->getHealth() < 20) $victim->setHealth(20);
 
 			$this->combatVictims[$criminal->getUniqueId()->getBytes()] = $victim;
-			$this->combatCriminals[$victim->getUniqueId()->getBytes()] = $criminal;
+			$this->combatCriminals[$victimBytes] = $criminal;
 			$this->combatTimers[$criminal->getUniqueId()->getBytes()] = 5;
-			$this->combatTimers[$victim->getUniqueId()->getBytes()] = 5;
+			$this->combatTimers[$victimBytes] = 5;
 		}
+	}
+
+	/**
+	 * @param BlockBreakEvent $event
+	 * @return void
+	 */
+	public function onBreak(BlockBreakEvent $event): void
+	{
+		$arena = $this->arena;
+		$mode = $arena->getMode();
+		$player = $event->getPlayer();
+		$bytes = $player->getUniqueId()->getBytes();
+
+		if (!array_key_exists($bytes, $mode->getPlayers())) {
+			return;
+		}
+
+		$event->cancel();
+	}
+
+	/**
+	 * @param BlockPlaceEvent $event
+	 * @return void
+	 */
+	public function onPlace(BlockPlaceEvent $event): void
+	{
+		$arena = $this->arena;
+		$mode = $arena->getMode();
+		$player = $event->getPlayer();
+		$bytes = $player->getUniqueId()->getBytes();
+
+		if (!array_key_exists($bytes, $mode->getPlayers())) {
+			return;
+		}
+
+		$event->cancel();
+	}
+
+	/**
+	 * @param PlayerExhaustEvent $event
+	 * @return void
+	 */
+	public function onExhaust(PlayerExhaustEvent $event): void
+	{
+		$arena = $this->arena;
+		$mode = $arena->getMode();
+		$player = $event->getPlayer();
+		$bytes = $player->getUniqueId()->getBytes();
+
+		if (!array_key_exists($bytes, $mode->getPlayers())) {
+			return;
+		}
+
+		$event->cancel();
 	}
 }
