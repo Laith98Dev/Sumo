@@ -49,7 +49,7 @@ use vp817\GameLib\event\PlayerJoinArenaEvent;
 use vp817\GameLib\event\PlayerQuitArenaEvent;
 use vp817\GameLib\event\listener\DefaultArenaListener;
 
-class ArenaEventListener implements DefaultArenaListener
+class ArenaEventListener extends DefaultArenaListener
 {
 
 	/** @var Player[] $combatVictims */
