@@ -42,6 +42,7 @@ use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\player\PlayerExhaustEvent;
 use pocketmine\player\GameMode;
 use pocketmine\player\Player;
+use pocketmine\scheduler\ClosureTask;
 use pocketmine\utils\TextFormat;
 use vp817\GameLib\arena\modes\ArenaModes;
 use vp817\GameLib\arena\states\ArenaStates;
@@ -71,6 +72,9 @@ class ArenaEventListener extends DefaultArenaListener
 	public array $victimsWithNoRecord = [];
 	/** @var Player[] $rwVictimsWithNoRecordGK */
 	public array $rwVictimsWithNoRecordGK = [];
+	
+	/** @var string[] $combatDamage */
+	public array $combatDamage = [];
 
 	/**
 	 * @param PlayerJoinArenaEvent $event
@@ -127,39 +131,6 @@ class ArenaEventListener extends DefaultArenaListener
 			$messageBroadcaster->broadcastTitle($color . strval($timer));
 		} else if ($state->equals(ArenaStates::INGAME())) {
 			$messageBroadcaster->broadcastTip(TextFormat::GOLD . "MaxTime: " . TextFormat::GREEN . strval($timer));
-
-			if (!empty($this->combatVictims) && !empty($this->combatCriminals)) {
-				foreach ($this->combatVictims as $cBytes => $victim) {
-					$vBytes = $victim->getUniqueId()->getBytes();
-					$criminal = $this->combatCriminals[$victim->getUniqueId()->getBytes()];
-
-					if (array_key_exists($cBytes, $this->combatTimers)) --$this->combatTimers[$cBytes];
-					if (array_key_exists($vBytes, $this->combatTimers)) --$this->combatTimers[$vBytes];
-				}
-			}
-
-			if (!empty($this->victimsWithNoRecord)) {
-				foreach ($this->victimsWithNoRecord as $bytes => $cause) {
-					$messageBroadcaster->broadcastMessage(TextFormat::GOLD . $victim->getName() . TextFormat::AQUA . " has been eliminated by " . TextFormat::RED . $cause);
-
-					unset($this->victimsWithNoRecord[$bytes]);
-				}
-			}
-
-			if (!empty($this->crminialsWithKills) && !empty($this->victimsThatGotKilled)) {
-				foreach ($this->crminialsWithKills as $vBytes => $criminal) {
-					$cBytes = $criminal->getUniqueId()->getBytes();
-					if (array_key_exists($cBytes, $this->victimsThatGotKilled)) {
-						$victim = $this->victimsThatGotKilled[$cBytes];
-						$vBytes = $$victim->getUniqueId()->getBytes();
-	
-						$messageBroadcaster->broadcastMessage(TextFormat::GOLD . $victim->getName() . TextFormat::AQUA . " has been eliminated by " . TextFormat::RED . $criminal->getName());
-	
-						if (array_key_exists($vBytes, $this->crminialsWithKills)) unset($this->crminialsWithKills[$vBytes]);
-						unset($this->victimsThatGotKilled[$cBytes]);
-					}
-				}
-			}
 
 			if ($mode->getPlayerCount() < 2) {
 				$mode->endGame($arena);
@@ -218,25 +189,20 @@ class ArenaEventListener extends DefaultArenaListener
 	 */
 	public function eliminatePlayer(string $cause, Player $player): void
 	{
+		$arena = $this->arena;
+		$messageBroadcaster = $arena->getMessageBroadcaster();
+
 		$bytes = $player->getUniqueId()->getBytes();
 
-		if (array_key_exists($bytes, $this->combatTimers)) {
-			$criminal = $this->combatCriminals[$bytes];
-
-			$this->crminialsWithKills[$player->getUniqueId()->getBytes()] = $criminal;
-			$this->victimsThatGotKilled[$criminal->getUniqueId()->getBytes()] = $player;
-
-			unset($this->combatTimers[$bytes]);
-			unset($this->combatTimers[$criminal->getUniqueId()->getBytes()]);
-
-			$this->setSpectator($player);
-			return;
+		if(isset($this->combatDamage[$bytes])){
+			$cause = $this->combatDamage[$bytes];
 		}
 
-		$this->victimsWithNoRecord[$bytes] = $player;
-		$this->rwVictimsWithNoRecordGK[$bytes] = $cause;
+		$messageBroadcaster->broadcastMessage(TextFormat::GOLD . $player->getName() . TextFormat::AQUA . " has been eliminated by " . TextFormat::RED . $cause);
 
 		$this->setSpectator($player);
+
+		$arena->getMode()->endGame($arena);
 	}
 
 	/**
@@ -277,21 +243,6 @@ class ArenaEventListener extends DefaultArenaListener
 
 		$cause = $event->getCause();
 
-		switch ($cause) {
-			case EntityDamageEvent::CAUSE_VOID:
-			case EntityDamageEvent::CAUSE_LAVA:
-			case EntityDamageEvent::CAUSE_FIRE:
-			case EntityDamageEvent::CAUSE_FALL:
-				$this->eliminatePlayer(match ($cause) {
-					EntityDamageEvent::CAUSE_VOID => "Void",
-					EntityDamageEvent::CAUSE_LAVA => "Lava",
-					EntityDamageEvent::CAUSE_FIRE => "Fire",
-					EntityDamageEvent::CAUSE_FALL => "Void",
-					default => "Unknown"
-				}, $victim);
-				break;
-		}
-
 		if ($event instanceof EntityDamageByEntityEvent) {
 			$criminal = $event->getDamager();
 
@@ -305,10 +256,31 @@ class ArenaEventListener extends DefaultArenaListener
 
 			if ($victim->getHealth() < 20) $victim->setHealth(20);
 
-			$this->combatVictims[$criminal->getUniqueId()->getBytes()] = $victim;
-			$this->combatCriminals[$victimBytes] = $criminal;
-			$this->combatTimers[$criminal->getUniqueId()->getBytes()] = 5;
-			$this->combatTimers[$victimBytes] = 5;
+			$bytes = $victim->getUniqueId()->getBytes();
+
+			$this->combatDamage[$bytes] = $criminal->getName();
+
+			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(function () use ($bytes){
+				if(isset($this->combatDamage[$bytes])){
+					unset($this->combatDamage[$bytes]);
+				}
+			}), 5 * 20);
+			
+		}
+
+		switch ($cause) {
+			case EntityDamageEvent::CAUSE_VOID:
+			case EntityDamageEvent::CAUSE_LAVA:
+			case EntityDamageEvent::CAUSE_FIRE:
+			case EntityDamageEvent::CAUSE_FALL:
+				$this->eliminatePlayer(match ($cause) {
+					EntityDamageEvent::CAUSE_VOID => "Void",
+					EntityDamageEvent::CAUSE_LAVA => "Lava",
+					EntityDamageEvent::CAUSE_FIRE => "Fire",
+					EntityDamageEvent::CAUSE_FALL => "Void",
+					default => "Unknown"
+				}, $victim);
+				break;
 		}
 	}
 
