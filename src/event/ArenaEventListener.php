@@ -253,7 +253,7 @@ class ArenaEventListener extends DefaultArenaListener
 			
 		}
 
-		$killingMessages [
+		$killingMessages = [
 			EntityDamageEvent::CAUSE_VOID => "Void",
 			EntityDamageEvent::CAUSE_LAVA => "Falling in Lava",
 			EntityDamageEvent::CAUSE_FIRE => "Fire",
