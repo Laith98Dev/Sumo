@@ -246,26 +246,22 @@ class ArenaEventListener extends DefaultArenaListener
 			$this->combatDamage[$bytes] = $criminal->getName();
 
 			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(function () use ($bytes){
-				if(isset($this->combatDamage[$bytes])){
+				if (isset($this->combatDamage[$bytes])) {
 					unset($this->combatDamage[$bytes]);
 				}
 			}), 5 * 20);
 			
 		}
 
-		switch ($cause) {
-			case EntityDamageEvent::CAUSE_VOID:
-			case EntityDamageEvent::CAUSE_LAVA:
-			case EntityDamageEvent::CAUSE_FIRE:
-			case EntityDamageEvent::CAUSE_FALL:
-				$this->eliminatePlayer(match ($cause) {
-					EntityDamageEvent::CAUSE_VOID => "Void",
-					EntityDamageEvent::CAUSE_LAVA => "Lava",
-					EntityDamageEvent::CAUSE_FIRE => "Fire",
-					EntityDamageEvent::CAUSE_FALL => "Void",
-					default => "Unknown"
-				}, $victim);
-				break;
+		$killingMessages [
+				EntityDamageEvent::CAUSE_VOID => "Void",
+				EntityDamageEvent::CAUSE_LAVA => "Falling in Lava",
+				EntityDamageEvent::CAUSE_FIRE => "Fire",
+				EntityDamageEvent::CAUSE_FALL => "Falling" // todo: this may be prevented
+		];
+
+		if ($cause > 3 & && $cause < 7) {
+				$this->eliminatePlayer(@$killingMessages[$cause] ?? "Unknown");
 		}
 	}
 
