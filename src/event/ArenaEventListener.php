@@ -56,23 +56,8 @@ use vp817\GameLib\event\listener\DefaultArenaListener;
 class ArenaEventListener extends DefaultArenaListener
 {
 
-	/** @var Player[] $combatVictims */
-	public array $combatVictims = [];
-	/** @var Player[] $combatCriminals */
-	public array $combatCriminals = [];
-	/** @var int[] $combatTimers */
-	public array $combatTimers = [];
 	/** @var Player[] $spectators */
 	public array $spectators = [];
-	/** @var Player[] $crminialsWithKills */
-	public array $crminialsWithKills = [];
-	/** @var Player[] $victimsThatGotKilled */
-	public array $victimsThatGotKilled = [];
-	/** @var Player[] $victimsWithNoRecord */
-	public array $victimsWithNoRecord = [];
-	/** @var Player[] $rwVictimsWithNoRecordGK */
-	public array $rwVictimsWithNoRecordGK = [];
-	
 	/** @var string[] $combatDamage */
 	public array $combatDamage = [];
 
