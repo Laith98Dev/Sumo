@@ -254,14 +254,14 @@ class ArenaEventListener extends DefaultArenaListener
 		}
 
 		$killingMessages [
-				EntityDamageEvent::CAUSE_VOID => "Void",
-				EntityDamageEvent::CAUSE_LAVA => "Falling in Lava",
-				EntityDamageEvent::CAUSE_FIRE => "Fire",
-				EntityDamageEvent::CAUSE_FALL => "Falling" // todo: this may be prevented
+			EntityDamageEvent::CAUSE_VOID => "Void",
+			EntityDamageEvent::CAUSE_LAVA => "Falling in Lava",
+			EntityDamageEvent::CAUSE_FIRE => "Fire",
+			EntityDamageEvent::CAUSE_FALL => "Falling" // todo: unknown if this is prevented or not
 		];
 
-		if ($cause > 3 & && $cause < 7) {
-				$this->eliminatePlayer(@$killingMessages[$cause] ?? "Unknown");
+		if (($cause > 3 & && $cause < 7) && $cause !== EntityDamageEvent::CAUSE_FIRE_TICK) {
+			$this->eliminatePlayer($killingMessages[$cause] ?? "Unknown");
 		}
 	}
 
