@@ -260,8 +260,8 @@ class ArenaEventListener extends DefaultArenaListener
 			EntityDamageEvent::CAUSE_FALL => "Falling" // todo: unknown if this is prevented or not
 		];
 
-		if (($cause > 3 & && $cause < 7) && $cause !== EntityDamageEvent::CAUSE_FIRE_TICK) {
-			$this->eliminatePlayer($killingMessages[$cause] ?? "Unknown");
+		if (($cause > 3 && $cause < 7) && $cause !== EntityDamageEvent::CAUSE_FIRE_TICK) {
+			$this->eliminatePlayer($killingMessages[$cause] ?? "Unknown", $victim);
 		}
 	}
 
