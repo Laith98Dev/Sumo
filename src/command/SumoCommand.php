@@ -65,6 +65,7 @@ class SumoCommand extends Command
 	public function __construct(private GameLib $gamelib)
 	{
 		parent::__construct("sumo", "sumo command");
+		$this->setPermission("sumo.admin");
 	}
 
 	/**
