@@ -163,7 +163,7 @@ class ArenaEventListener extends DefaultArenaListener
 		}
 
 		foreach ($arena->getMode()->getPlayers() as $player) {
-			$arena->quit($player->getCells(), null, fn($reason) => $player->getCells()->sendMessage(TextFormat::RED . $reason), false, true);
+			$arena->quit($player->getCells(), null, fn ($reason) => $player->getCells()->sendMessage(TextFormat::RED . $reason), false, true);
 		}
 	}
 
@@ -179,7 +179,7 @@ class ArenaEventListener extends DefaultArenaListener
 
 		$bytes = $player->getUniqueId()->getBytes();
 
-		if(isset($this->combatDamage[$bytes])){
+		if (isset($this->combatDamage[$bytes])) {
 			$cause = $this->combatDamage[$bytes];
 		}
 
@@ -245,23 +245,26 @@ class ArenaEventListener extends DefaultArenaListener
 
 			$this->combatDamage[$bytes] = $criminal->getName();
 
-			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(function () use ($bytes){
+			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(function () use ($bytes) {
 				if (isset($this->combatDamage[$bytes])) {
 					unset($this->combatDamage[$bytes]);
 				}
 			}), 5 * 20);
-			
 		}
 
-		$killingMessages = [
-			EntityDamageEvent::CAUSE_VOID => "Void",
-			EntityDamageEvent::CAUSE_LAVA => "Falling in Lava",
-			EntityDamageEvent::CAUSE_FIRE => "Fire",
-			EntityDamageEvent::CAUSE_FALL => "Falling" // todo: unknown if this is prevented or not
-		];
-
-		if (($cause > 3 && $cause < 7) && $cause !== EntityDamageEvent::CAUSE_FIRE_TICK) {
-			$this->eliminatePlayer($killingMessages[$cause] ?? "Unknown", $victim);
+		switch ($cause) {
+			case EntityDamageEvent::CAUSE_VOID:
+			case EntityDamageEvent::CAUSE_LAVA:
+			case EntityDamageEvent::CAUSE_FIRE:
+			case EntityDamageEvent::CAUSE_FALL:
+				$this->eliminatePlayer(match ($cause) {
+					EntityDamageEvent::CAUSE_VOID => "Void",
+					EntityDamageEvent::CAUSE_LAVA => "Lava",
+					EntityDamageEvent::CAUSE_FIRE => "Fire",
+					EntityDamageEvent::CAUSE_FALL => "Void",
+					default => "Unknown"
+				}, $victim);
+				break;
 		}
 	}
 
