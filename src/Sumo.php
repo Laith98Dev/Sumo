@@ -40,6 +40,7 @@ use vp817\command\SumoCommand;
 use vp817\event\ArenaEventListener;
 use vp817\event\SetupEventListener;
 use vp817\GameLib\GameLib;
+use vp817\GameLib\GameLibType;
 
 class Sumo extends PluginBase
 {
@@ -48,7 +49,7 @@ class Sumo extends PluginBase
 
 	protected function onEnable(): void
 	{
-		$this->gamelib = GameLib::init($this, [ "type" => "sqlite" ], [ "enabled" => false ]);
+		$this->gamelib = GameLib::init($this, GameLibType::MINIGAME(), [ "type" => "sqlite" ]);
 		$this->gamelib->setArenasBackupPath($this->getDataFolder() . "backups");
 		$this->gamelib->setArenaListenerClass(ArenaEventListener::class);
 		$this->gamelib->loadArenas(fn ($arena) => $this->getLogger()->alert("The arena \"" . $arena->getID() . "\" has been loaded"));
