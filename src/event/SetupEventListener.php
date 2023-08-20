@@ -92,7 +92,7 @@ class SetupEventListener implements Listener
 					break;
 				case "lobby":
 					$cells->sendMessage(TextFormat::GOLD . "The lobby has been updated to: " . $currentWorldName);
-					$settingsQueue->setLobbySettings($currentWorldName, $cellsLocation);
+					$settingsQueue->setLobbySettings($cellsLocation);
 					break;
 				case "spawn1":
 					$cells->sendMessage(TextFormat::GOLD . "The spawn1 has been updated to your pos");
